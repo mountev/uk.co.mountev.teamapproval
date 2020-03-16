@@ -168,3 +168,60 @@ function teamapproval_civicrm_navigationMenu(&$menu) {
   ));
   _teamapproval_civix_navigationMenu($menu);
 } // */
+
+/**
+ * Implements hook_civicrm_civicrm_custom
+ *
+ * If team status gets Approved, create an activity if doesn't already exist.
+ *
+ */
+function teamapproval_civicrm_custom( $op, $groupID, $entityID, &$params ) {
+  if ( $op != 'create' && $op != 'edit' ) {
+    return;
+  }
+  if ($groupID == 1) { // Team Details
+    $teamStatusCFId = CRM_Core_DAO::getFieldValue('CRM_Core_DAO_CustomField', 'Team_Status', 'id', 'name');
+    $customOption = CRM_Core_BAO_CustomOption::getCustomOption($teamStatusCFId, TRUE);
+    $optionValues = CRM_Core_PseudoConstant::get('CRM_Core_BAO_CustomField', 'custom_' . $teamStatusCFId, [], 'create');
+    $optionValues = array_flip($optionValues);
+    foreach ($params as $param) {
+      if ($param['custom_field_id'] == $teamStatusCFId && $param['value'] == $optionValues['Approved']) {
+        $result = civicrm_api3('Activity', 'get', [
+          'sequential' => 1,
+          'activity_type_id' => "Team Status Approved",
+          'assignee_contact_id' => $entityID
+        ]);
+        if (empty($result['count']) && empty($result['values'])) {
+          $sourceContactId  = CRM_Core_Session::getLoggedInContactID();
+          $targetContactIds = [];
+          $result = civicrm_api3('Relationship', 'get', [
+            'sequential'   => 1,
+            'return'       => ["contact_id_a"],
+            'relationship_type_id' => CRM_Core_DAO::getFieldValue('CRM_Contact_DAO_RelationshipType', 'Employee of', 'id', 'name_a_b'),
+            'contact_id_b' => $entityID,
+            'is_active'    => 1,
+            'options'      => ['limit' => 0],
+          ]);
+          if (!empty($result['count']) && !empty($result['values'])) {
+            foreach ($result['values'] as $rel) {
+              $targetContactIds[] = $rel['contact_id_a'];
+            }
+          }
+          if (!empty($targetContactIds)) {
+            $activityParams = [
+              'source_contact_id'   => $sourceContactId,
+              'target_contact_id'   => $targetContactIds,
+              'assignee_contact_id' => $entityID,
+              'activity_date_time'  => date('YmdHis'),
+              'subject'             => ts('Team Status Approved'),
+              'details'             => ts('Team Status Approved'),
+              'status_id'           => CRM_Core_PseudoConstant::getKey('CRM_Activity_BAO_Activity', 'activity_status_id', 'Completed'),
+              'activity_type_id'    => CRM_Core_PseudoConstant::getKey('CRM_Activity_BAO_Activity', 'activity_type_id', 'Team Status Approved'),
+            ];
+            $result = civicrm_api3('Activity', 'create', $activityParams);
+          }
+        }
+      }
+    }
+  }
+}
