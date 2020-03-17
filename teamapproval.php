@@ -157,17 +157,18 @@ function teamapproval_civicrm_preProcess($formName, &$form) {
  *
  * @link https://docs.civicrm.org/dev/en/latest/hooks/hook_civicrm_navigationMenu
  *
+ */
 function teamapproval_civicrm_navigationMenu(&$menu) {
-  _teamapproval_civix_insert_navigation_menu($menu, 'Mailings', array(
-    'label' => E::ts('New subliminal message'),
-    'name' => 'mailing_subliminal_message',
-    'url' => 'civicrm/mailing/subliminal',
-    'permission' => 'access CiviMail',
-    'operator' => 'OR',
+  _teamapproval_civix_insert_navigation_menu($menu, 'Administer/System Settings', array(
+    'label' => E::ts('Team Approval'),
+    'name' => 'team_approval',
+    'url' => CRM_Utils_System::url('civicrm/admin/setting/team-approval', 'reset=1'),
+    'permission' => 'administer CiviCRM',
+    //'operator' => 'OR',
     'separator' => 0,
   ));
   _teamapproval_civix_navigationMenu($menu);
-} // */
+}
 
 /**
  * Implements hook_civicrm_civicrm_custom
@@ -204,7 +205,15 @@ function teamapproval_civicrm_custom( $op, $groupID, $entityID, &$params ) {
           ]);
           if (!empty($result['count']) && !empty($result['values'])) {
             foreach ($result['values'] as $rel) {
-              $targetContactIds[] = $rel['contact_id_a'];
+              $targetContactIds[$rel['contact_id_a']] = $rel['contact_id_a'];
+            }
+          }
+          // ignore contacts with a registration if configured
+          if (!empty($targetContactIds) && Civi::settings()->get('teamapproval_event_id')) {
+            $query = "SELECT contact_id FROM civicrm_participant WHERE event_id = %1 AND status_id IN (1,2) AND contact_id IN ( " . implode(',', $targetContactIds) . ' ) ';
+            $participants = CRM_Core_DAO::executeQuery($query, [1 => [Civi::settings()->get('teamapproval_event_id'), 'Positive']]);
+            while ($participants->fetch()) {
+              unset($targetContactIds[$participants->contact_id]);
             }
           }
           if (!empty($targetContactIds)) {
