@@ -1,6 +1,6 @@
 # uk.co.mountev.teamapproval
 
-Notify team members when team status gets Approved.
+Notify team members when team status gets Approved (Team Details > Status).
 
 The extension is licensed under [AGPL-3.0](LICENSE.txt).
 
@@ -20,7 +20,7 @@ install it with the command-line tool [cv](https://github.com/civicrm/cv).
 
 ```bash
 cd <extension-dir>
-cv dl uk.co.mountev.teamapproval@https://github.com/FIXME/uk.co.mountev.teamapproval/archive/master.zip
+cv dl uk.co.mountev.teamapproval@https://github.com/mountev/uk.co.mountev.teamapproval/archive/master.zip
 ```
 
 ## Installation (CLI, Git)
@@ -29,14 +29,13 @@ Sysadmins and developers may clone the [Git](https://en.wikipedia.org/wiki/Git) 
 install it with the command-line tool [cv](https://github.com/civicrm/cv).
 
 ```bash
-git clone https://github.com/FIXME/uk.co.mountev.teamapproval.git
+git clone https://github.com/mountev/uk.co.mountev.teamapproval.git
 cv en teamapproval
 ```
 
 ## Usage
 
-(* FIXME: Where would a new user navigate to get started? What changes would they see? *)
-
-## Known Issues
-
-(* FIXME *)
+- Make sure activity type 'Team Status Approved' exists. An activity gets created everytime a team gets Approved (Team Details > Status).
+- Create a new message template for notification that will be used for notifying all team members.
+- Setup scheduled reminder from activities of type 'Team Status Approved' with tokens {contact.current_employer}, and {contactk2b.team_number}.
+- Make sure reminder cron is enabled.

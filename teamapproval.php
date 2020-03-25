@@ -182,7 +182,6 @@ function teamapproval_civicrm_custom( $op, $groupID, $entityID, &$params ) {
   }
   if ($groupID == 1) { // Team Details
     $teamStatusCFId = CRM_Core_DAO::getFieldValue('CRM_Core_DAO_CustomField', 'Team_Status', 'id', 'name');
-    $customOption = CRM_Core_BAO_CustomOption::getCustomOption($teamStatusCFId, TRUE);
     $optionValues = CRM_Core_PseudoConstant::get('CRM_Core_BAO_CustomField', 'custom_' . $teamStatusCFId, [], 'create');
     $optionValues = array_flip($optionValues);
     foreach ($params as $param) {
@@ -233,4 +232,5 @@ function teamapproval_civicrm_custom( $op, $groupID, $entityID, &$params ) {
       }
     }
   }
+
 }
